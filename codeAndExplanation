@@ -13,20 +13,19 @@
 %        
 %     end
 
-# After the code was resized i
-   %% Normalization of images
+# After the images was resized the images were normalized
+#It was done  to remove the differing lighting effects of images
+
+%% Normalization of images
 % for i=1:size(A,1)
 %     minimum=min(A(i,:));
 %     maximum=max(A(i,:));
 %     A(i,:)=(A(i,:)-minimum)*255/(maximum-minimum);
 % end;
-% 
-% %%%show a normalized image
-% imshow(uint8(reshape(A(35,:),[100,100])))
-% % 
-% 
-% 
-% 
+
+#The images mean are then calculated i.e. we take the mean across all the columns.
+#It was done to remove the deviations of each image from this mean image. This is known as ‘Centering’.
+
 % %%%Mean image
 % meanImage=mean(A,1);
 % imshow(uint8(reshape(meanImage,[100,100])))
@@ -36,21 +35,28 @@
 %  for i=1:size(A,1)
 %    A(i,:)=A(i,:)-meanImage;
 %  end
-% 
+
+# Then the eigen values were calculated using the princomp function.
 % [eigenVectors,score,eigenValues]=princomp(A);
-% 
-% 
-% % % normalize the eigenvectors
-% % 
-%  for i=1:size(eigenVectors,2);
-%      temp=eigenVectors(:,i);
-%      eigenVectors(:,i)=eigenVectors(:,i)/sqrt(sum(temp.^2));
-%  end
-% % 
+
+#  Alternate way to find the eigenvectors U:
+
+# Sometimes the covariance matrix A*A’ is huge so we find the inner product A’ * A which is a smaller matrix.
+
+# (A’*A) * V= lambda * V 
+
+#V is the eigenvectors of the inner product matrix.
+
+
+# And U= lambda^0.5 * A *V
+## Now U is the desired eigenVectors
+
+# Then I chose the number of eigenvectors to keep 
 
 %  NumberOfEigenFaceVectors = 25;
 %  eigenVectors = eigenVectors(:, 1:NumberOfEigenFaceVectors);
-% % 
+
+#### Displayting the eigenvectors or eigenfaces
 %%
 % figure(1)
 % title('Principal Components');
@@ -59,12 +65,15 @@
 %     imges=imagesc(reshape(eigenVectors(:,i),[100 100]));
 %     
 % end
-% % 
-% % 
+
+# Then training images are projected onto the eigenface/ eigenvectors space by taking the inner product of
+# the training image matrix with the eigenvector matrix
+
 %  % Now  project the images onto the principal eigenvectors
 %   TrainingProjectedOntoPrinComp = A * eigenVectors;
 % % 
-% addpath('G:\DataMiningData\Dataset\ValidationSet');
+
+# Then I do resize the validation images
 % h=dir('G:\DataMiningData\Dataset\ValidationSet\*.jpg');
 % for j=1:numel(h);
 %     V=double(imread(h(j).name));
@@ -72,24 +81,32 @@
 %     ValidationImage(j,:)=V;
 % end
 
+
 %  ValidatingImages=ValidationImage;
-% % % Normalization of the Validation images
+
+#  Then I do normalization of the validation images too
+
+% % Normalization of the Validation images
 % for i=1:size(ValidationImage,1)
 %     minimum=min(ValidationImage(i,:));
 %     maximum=max(ValidationImage(i,:));
 %     ValidationImage(i,:)=(ValidationImage(i,:)-minimum)*255/(maximum-minimum);
 % end;
 
+
+# I subtract the mean training image from the validation images
+
 % % Subtracting the mean from the ValidationImage
-% 
-% 
+
 %  for i=1:size(ValidationImage,1)
 %    ValidationImage(i,:)=ValidationImage(i,:)-meanImage;
 %     end
-% 
-% % %%% Projecting Validaion vectors on to eigenface space
-% 
-%%%euclidean distance  
+
+# then I project each of the validation image onto the eigenface space and then we calculate the euclidean distance of the 
+# training image from the validation image
+
+% % %%% Projecting Validation vectors on to eigenface space
+%%euclidean distance  
 % for i=1:size(ValidationImage,1);
 %     ValidationProjectedOntoPrinComp=ValidationImage(i,:) * eigenVectors  ;
 %     euclideanSimilarity=arrayfun(@(func) norm(TrainingProjectedOntoPrinComp(func,:)-ValidationProjectedOntoPrinComp),1:size(A,1));
@@ -100,6 +117,12 @@
 %     Indices(i,:)=Q(1:3);
 % 
 % end
+
+# As I want to try for 1 nearest neighbour and 3 nearest neighbour so I keep the indices of 3 training images which are closest to the 
+# validation image in the 25 dimensional eigenvector space
+
+# I check for 1NN
+# By showing the image which is closest to the validation image
 
 %%%%checking for 1 nearest neighbour
 % for i=1:size(ValidatingImages,1)
@@ -119,10 +142,10 @@
 % title('Training Image Recognized');
 % end
 
+# Here I got 23 out of 24 images identified correctly
 
 
-% 
-
+# Now I check for 3 NN
 
 %%%checking for 3 nearest neighbour
 % for i=1:size(ValidationImage,1)
@@ -143,14 +166,15 @@
 % end
 % end
 % 
-% 
-% 
-%%
-% % %  %% Now testing the test images
-      
-% % %  %% Now testing the test images
-        
-% addpath('G:\DataMiningData\Dataset\TestSet');
+
+### Here I got 22 out 24 images correctly identified
+
+
+# So i go for 1 Nearest Neighbour model to test the tesing images
+
+
+# I resize the testing images      
+
 % g=dir('G:\DataMiningData\Dataset\TestSet\*.jpg');
 % for j=1:numel(g);
 %     T=double(imread(g(j).name));
@@ -158,6 +182,9 @@
 %     testImage(j,:)=T;
 % end
 %  testingImages=testImage;
+
+# Then the testing images were normalized
+
 % % % Normalization of the test images
 % for i=1:size(testImage,1)
 %     minimum=min(testImage(i,:));
@@ -165,13 +192,16 @@
 %     testImage(i,:)=(testImage(i,:)-minimum)*255/(maximum-minimum);
 % end;
 
-% % Subtracting the mean from the TestImages
-% 
-% 
+# The mean training image is then subtracted from the test images 
+
 %  for i=1:size(testImage,1)
 %    testImage(i,:)=testImage(i,:)-meanImage;
 %     end
 % % 
+
+# Then the each of the test image was then projected onto the 25 dimensional eigenvector space
+#  And the euclidean distance is then calculated from each of the training image
+
 % % %%% Projecting test vectors on to eigenface space
 % 
 % % euclidean distance
@@ -184,7 +214,7 @@
 % 
 % end
 
-
+# Then I dislplay the training image that is nearest to the testing image
 % 
 % % 
 for i=1:size(testImage,1)
@@ -204,6 +234,7 @@ imshow(uint8(reshape(trainingImages(IndexOfTrainImages(i),:),[100,100])));
 title('Training Image Recognized');
 end
 
-% 
-% % 
-% % 
+# Here I get 24 out 24 images identified correct
+
+
+
